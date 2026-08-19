@@ -1,0 +1,117 @@
+{
+  // LIVE devcontainer for this repository — and the default frame a repository
+  // created from this template inherits. It builds as-is — no placeholders to
+  // replace — so a fresh repository has a working environment before anyone edits
+  // anything. Adjust it rather than replacing it.
+  //
+  // This is the single-container shape (one container, built from ./Dockerfile) —
+  // php-sdk, mcp-dis and the SDKs all use it. A repository that needs a database,
+  // a mail catcher or a second web server wants the compose frame instead; see
+  // ../examples/devcontainer/compose/ and TEMPLATE-SETUP.md section 2.
+  //
+  // Everything shared lives in the devbase Feature, not here. What stays in this
+  // file is exactly what a Feature cannot set: the name, the workspace paths, the
+  // remote user, forwarded ports, initializeCommand, the host mounts, and the
+  // language runtime this repository is written in.
+  "name": "dstack-template",
+  "build": {
+    "context": ".",
+    "dockerfile": "Dockerfile"
+  },
+
+  // localWorkspaceFolderBasename is the repository directory name, so these two
+  // lines need no editing per repository and cannot drift out of sync with it.
+  "workspaceMount": "source=${localWorkspaceFolder},target=/usr/share/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "workspaceFolder": "/usr/share/${localWorkspaceFolderBasename}",
+  "shutdownAction": "stopContainer",
+
+  // Host-side preflight for the binds at the bottom of this file. Runs on the host
+  // before the container is created, so it cannot be moved into a Feature.
+  //
+  // Every entry exists for one reason: Docker creates a missing bind source
+  // itself, as a root-owned *directory*. For ~/.claude and ~/.ssh that yields a
+  // directory nobody in the container can write to; for ~/.gitconfig it yields a
+  // directory where git expects a file, and it does so on the host too — the
+  // damage outlives the container. Creating them first is idempotent and cheap.
+  //
+  // Object form (rather than one && chain) because the spec supports it for every
+  // lifecycle command: the entries run in parallel and each is labelled in the
+  // build log, so a failure names itself instead of surfacing as "command failed".
+  "initializeCommand": {
+    "claude-state": "mkdir -p ${localEnv:HOME}/.claude",
+    "ssh-dir": "mkdir -p ${localEnv:HOME}/.ssh",
+    "gitconfig": "touch ${localEnv:HOME}/.gitconfig"
+  },
+
+  "features": {
+    // Uncomment the language this repository is actually written in. devbase
+    // declares installsAfter for all of them, so its post-create runs once the
+    // runtimes are in place, whichever you pick.
+    // "ghcr.io/devcontainers/features/php:1": { "version": "8.3", "installComposer": true, "extensions": "xdebug" },
+    // "ghcr.io/devcontainers/features/go:1": { "version": "latest" },
+    // "ghcr.io/devcontainers/features/python:1": { "version": "3.13" },
+    // "ghcr.io/devcontainers/features/java:1": { "version": "21" },
+
+    // The shared behaviour layer: zsh with the team prompt, commitizen, pnpm, the
+    // gh credential helper, persistent shell history, dependency installation, the
+    // on-attach toolchain banner, and the RTK binary the committed
+    // .claude/settings.json hook looks for.
+    //
+    // It also declares its own Feature dependencies — Node LTS, the GitHub CLI and
+    // the Claude Code CLI — so none of the three is listed here and their digests
+    // move with a devbase release instead of a per-repository Dependabot PR. All
+    // three are devbase's own plumbing rather than a repository choice: the gh
+    // credential helper is broken without `gh`, RTK is a Claude Code proxy that
+    // does nothing without `claude`, and Node carries the language-agnostic
+    // tooling every repository has regardless of its product language (prettier,
+    // husky, lint-staged, and the quality gate that runs them).
+    //
+    // Do NOT re-declare node:2 here to move the version. One Feature id with two
+    // different option sets counts as two distinct Features under the spec's
+    // equality rule, so Node would install twice into the same nvm path. A
+    // repository that genuinely needs a non-LTS major raises it against the
+    // Feature — that is a shared decision, which is the whole reason it moved in.
+    //
+    // Referenced by version, never copied. Options and troubleshooting:
+    // https://github.com/centralnicgroup-opensource/rtldev-middleware-devcontainer-features
+    "ghcr.io/centralnicgroup-opensource/rtldev-middleware-devcontainer-features/devbase:1": {}
+  },
+
+  // No "customizations" block on purpose. devbase contributes the entire shared
+  // VS Code layer: the GitHub Actions, GitHub PRs, Remote Containers, Containers
+  // and two Claude extensions, plus shellcheck / shell-format / vscode-yaml with
+  // their settings (shellcheck.enable, shellcheck.customArgs, npm.packageManager)
+  // and the zsh terminal profile. Those three used to be repeated here — they are
+  // not language-specific, so they belong to the shared layer, same reasoning as
+  // quality.yml being live.
+  //
+  // Add a block back only for this repository's *language* extensions:
+  // "customizations": {
+  //   "vscode": {
+  //     "extensions": ["bmewburn.vscode-intelephense-client"]
+  //   }
+  // },
+
+  "remoteUser": "vscode",
+
+  // .ssh and .gitconfig make git work as it does on the host; /WSL_USER is what
+  // devbase's history persistence reads; .claude carries the Claude Code session
+  // state. Kept here rather than in the Feature so a compose-based repository can
+  // express the same thing as compose volumes.
+  //
+  // The ${localEnv:HOME}${localEnv:USERPROFILE} concatenation resolves to whichever
+  // of the two the host defines. On a host that defines *both* it resolves to
+  // neither and Docker mounts an empty directory; devbase reports that explicitly
+  // on post-create ("/WSL_USER is empty") rather than silently losing history.
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,readonly",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    "source=${localEnv:HOME}${localEnv:USERPROFILE},target=/WSL_USER,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+  ]
+
+  // No postCreateCommand / postAttachCommand here: devbase supplies both. Add your
+  // own only for repository-specific setup — they run after devbase's, so pnpm,
+  // the global packages and your dependencies are already in place.
+  // "postCreateCommand": "zsh .devcontainer/post-create.sh"
+}
