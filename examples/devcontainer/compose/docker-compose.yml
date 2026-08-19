@@ -20,7 +20,16 @@ services:
       - ..:/usr/share/{{REPO_NAME}}:cached
       # Sibling repositories this stack needs on the same filesystem, if any.
       # - ../../{{SIBLING_REPO}}:/usr/share/{{SIBLING_REPO}}:cached
+      #
+      # Host mounts. Compose expands a leading ~ itself, on Windows hosts too, so
+      # these need none of the ${localEnv:HOME}${localEnv:USERPROFILE} handling the
+      # devcontainer.json frame uses — that concatenation exists because the
+      # devcontainer spec has no ~ expansion, and it is what breaks when a host
+      # defines both variables. Nothing to carry over here.
+      #
+      # Fusion specific, you might not need it in RSRMID context
       - ~/.ssh:/home/vscode/.ssh:ro
+      # RSRMID specific mounts
       - ~/.gitconfig:/home/vscode/.gitconfig:cached
       # /WSL_USER is where devbase looks for .zsh_history to persist shell
       # history across rebuilds.
