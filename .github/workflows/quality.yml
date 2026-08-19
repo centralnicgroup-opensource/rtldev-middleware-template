@@ -1,0 +1,99 @@
+name: Quality
+"on":
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# LIVE workflow, and language-agnostic on purpose — it checks the things every
+# repository has regardless of what it is written in: Markdown/JSON/YAML formatting,
+# workflow syntax, and shell scripts.
+#
+# This is deliberately NOT the same file as examples/workflows/lint.yml, which delegates
+# to the language-specific shared workflow. Different names so that copying that one into
+# .github/workflows/ cannot silently overwrite this one — a repository wants both: the
+# universal checks here, and its language's analysers there.
+jobs:
+  prettier:
+    name: Prettier
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+      # Gated, not advisory: unformatted Markdown should be a red build rather than a
+      # local nag that everyone learns to ignore.
+      - name: Check formatting
+        run: npx --yes prettier@3 --check .
+
+  actionlint:
+    name: Actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Actionlint
+        uses: reviewdog/action-actionlint@v1
+        with:
+          reporter: github-pr-check
+          fail_level: error
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # -print0 | xargs -0 rather than word-splitting a variable: it survives paths with
+      # spaces, and `--no-run-if-empty` makes "this repository has no shell scripts" a
+      # pass instead of a shellcheck invoked with no arguments (which exits non-zero).
+      #
+      # The pruned directories hold generated scripts that are not ours to lint:
+      # .husky/_/ is written by husky on install (and its husky.sh has no shebang, so
+      # it fails SC2148), node_modules/ and vendor/ are dependencies. None of them
+      # exist in this job — it is a bare checkout with no install step — but pruning
+      # them means running this same command locally, in a populated working tree,
+      # gives the same answer CI does instead of a spurious failure.
+      - name: ShellCheck
+        run: |
+          {
+            find . \
+              -path ./.git -prune -o \
+              -path ./node_modules -prune -o \
+              -path ./vendor -prune -o \
+              -path ./.husky/_ -prune -o \
+              -name '*.sh' -print0
+            [ -f .husky/pre-commit ] && printf '%s\0' .husky/pre-commit
+          } | xargs -0 --no-run-if-empty shellcheck --severity=warning
+          echo "ShellCheck completed."
+
+  ci-success:
+    name: "Quality: completed"
+    needs: [prettier, actionlint, shellcheck]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        # Two things here are load-bearing, and both were wrong before:
+        #
+        # Single quotes inside the expression, because GitHub expressions have no
+        # double-quoted string literal — `join(needs.*.result, " ")` is not a style
+        # slip but a syntax error, and it makes the whole file "Invalid workflow
+        # file", so the gate never runs at all rather than running and passing.
+        #
+        # `tr` splits the space-joined results onto one line each. Against a single
+        # line, `grep -vw success` selects nothing as long as the word appears
+        # anywhere, so "success failure success" would report green — the one
+        # outcome this job exists to catch.
+        run: |
+          if echo '${{ join(needs.*.result, ' ') }}' | tr ' ' '\n' | grep -qvw success; then
+            echo "One or more quality jobs failed: ${{ join(needs.*.result, ' ') }}"
+            exit 1
+          fi

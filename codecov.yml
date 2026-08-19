@@ -1,0 +1,15 @@
+# Coverage gating. Delete this file if the repository does not report coverage —
+# an orphan codecov.yml makes it look as though it does.
+#
+# `threshold` is the drop tolerated before the check fails, so a refactor that moves
+# coverage by a rounding error does not turn the build red.
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+        threshold: 1%
