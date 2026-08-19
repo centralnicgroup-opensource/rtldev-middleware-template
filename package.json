@@ -1,24 +1,46 @@
 {
-    "name": "your-project-name",
-    "version": "1.0.0",
-    "description": "A brief description of your project",
-    "main": "index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "node index.js"
+  "name": "{{REPO_NAME}}",
+  "description": "{{DESCRIPTION}}",
+  "version": "0.0.0-development",
+  "private": true,
+  "license": "MIT",
+  "author": {
+    "name": "Kai Schwarz",
+    "email": "kai.schwarz@centralnic.com"
+  },
+  "maintainers": [
+    {
+      "name": "Kai Schwarz",
+      "email": "kai.schwarz@centralnic.com"
     },
-    "keywords": [],
-    "maintainers": [
-        {
-            "name": "Kai Schwarz",
-            "email": "kai.schwarz@centralnic.com"
-        },
-        {
-            "name": "Asif Nawaz",
-            "email": "asif.nawaz@centralnic.com"
-        }
-    ],
-    "license": "LICENSE",
-    "dependencies": {},
-    "devDependencies": {}
+    {
+      "name": "Asif Nawaz",
+      "email": "asif.nawaz@centralnic.com"
+    }
+  ],
+  "homepage": "https://github.com/centralnicgroup-opensource/{{REPO_NAME}}",
+  "repository": "github:centralnicgroup-opensource/{{REPO_NAME}}.git",
+  "bugs": "https://github.com/centralnicgroup-opensource/{{REPO_NAME}}/issues",
+  "keywords": [],
+  "engines": {
+    "node": ">=24.15.0",
+    "npm": ">=12.0.0"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "repo:settings": "bash scripts/repo-settings.sh",
+    "repo:settings:apply": "bash scripts/repo-settings.sh --apply"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6"
+  },
+  "lint-staged": {
+    "**/*": [
+      "prettier --write --ignore-unknown"
+    ]
+  }
 }

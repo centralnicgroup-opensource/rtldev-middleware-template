@@ -1,0 +1,42 @@
+# Line endings: normalise in the repository, check out LF everywhere. Without this,
+# a Windows clone rewrites shell scripts to CRLF and they stop being executable
+# inside the container.
+* text=auto eol=lf
+
+# --- distribution archive -----------------------------------------------------
+# Only relevant if this repository is published as a package (Packagist, npm) —
+# `export-ignore` keeps dev-only files out of the published archive. Delete this
+# whole section otherwise.
+#
+# There is no negation syntax here: anything not listed ships. So a new dev-only
+# root file needs a matching line, and `git archive HEAD | tar -t` is how you check.
+.claude export-ignore
+.devcontainer export-ignore
+.github export-ignore
+.husky export-ignore
+docs export-ignore
+examples export-ignore
+tests export-ignore
+build export-ignore
+reports export-ignore
+
+.editorconfig export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+.prettierignore export-ignore
+.prettierrc export-ignore
+.releaserc.json export-ignore
+CLAUDE.md export-ignore
+CONTRIBUTING.md export-ignore
+TEMPLATE-SETUP.md export-ignore
+codecov.yml export-ignore
+package.json export-ignore
+pnpm-lock.yaml export-ignore
+pnpm-workspace.yaml export-ignore
+*.sh export-ignore
+
+# --- language statistics ------------------------------------------------------
+# GitHub's language bar is computed from all files, so vendored or generated code
+# in an unrelated language misreports what the repository is. Adjust to taste.
+*.html linguist-detectable=false
+*.css linguist-detectable=false
