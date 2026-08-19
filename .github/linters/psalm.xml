@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!--
+    Psalm configuration. Paths are relative to THIS file (.github/linters/), matching
+    the phpstan.neon convention.
+
+    errorLevel="1" is the strictest setting and the team standard. findUnusedCode and
+    findUnusedBaselineEntry are on deliberately: they are what stop a suppression
+    outliving the problem it was added for. A suppression that no longer fires becomes
+    an error (UnusedIssueHandlerSuppression), so dead entries get removed on evidence
+    rather than on a guess.
+-->
+<psalm
+    errorLevel="1"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="true"
+>
+    <projectFiles>
+        <directory name="../../src" />
+        <directory name="../../tests" />
+        <ignoreFiles>
+            <directory name="../../vendor" />
+        </ignoreFiles>
+    </projectFiles>
+    <issueHandlers>
+        <!--
+            Test runners invoke test classes and methods through reflection, which
+            findUnusedCode cannot see — so every test class reads as dead code. Scope
+            the suppression to tests/ only; src/ stays strict, so genuine dead code in
+            the shipped source is still an error.
+
+            Every suppression added here needs a comment saying why. An uncommented
+            suppression is indistinguishable from a silenced real bug a year later.
+        -->
+        <UnusedClass>
+            <errorLevel type="suppress">
+                <directory name="../../tests" />
+            </errorLevel>
+        </UnusedClass>
+    </issueHandlers>
+</psalm>

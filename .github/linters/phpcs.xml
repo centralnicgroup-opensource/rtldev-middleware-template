@@ -1,11 +1,65 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<ruleset name="super-linter">
-    <description>The default coding standard for usage with GitHub Super-Linter. It just includes PSR12.</description>
-    <!-- Use PSR-12 as a base -->
+<ruleset name="{{REPO_NAME}}">
+    <description>PSR-12, with an optional SlevomatCodingStandard block for modern PHP.</description>
+
     <rule ref="PSR12"/>
+
     <arg value="s"/>
     <arg value="q"/>
     <arg value="n"/>
     <arg name="colors"/>
+
+    <!--
+        The rules below are the team's fuller standard, as used by php-sdk. They need
+        an extra dev dependency:
+
+            composer require --dev slevomat/coding-standard
+
+        Uncomment this block once that is installed — enabling it without the
+        dependency makes phpcs fail hard on an unresolvable ruleset reference rather
+        than skipping the rules.
+
+        If you enable it, also uncomment the PSR12.Files.FileHeader.IncorrectOrder
+        exclusion: PSR12 and Slevomat disagree about whether declare(strict_types=1)
+        comes before or after the file docblock, and Slevomat's DeclareStrictTypes
+        rule is the one that then owns the decision.
+    -->
+    <!--
+    <rule ref="PSR12">
+        <exclude name="PSR12.Files.FileHeader.IncorrectOrder"/>
+    </rule>
+
+    <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes">
+        <properties>
+            <property name="spacesCountAroundEqualsSign" value="0"/>
+        </properties>
+    </rule>
+
+    <rule ref="SlevomatCodingStandard.Namespaces.UnusedUses">
+        <properties>
+            <property name="searchAnnotations" value="true"/>
+        </properties>
+    </rule>
+
+    <rule ref="SlevomatCodingStandard.Namespaces.ReferenceUsedNamesOnly">
+        <properties>
+            <property name="allowFullyQualifiedGlobalClasses" value="true"/>
+            <property name="allowFullyQualifiedGlobalFunctions" value="true"/>
+            <property name="allowFullyQualifiedGlobalConstants" value="true"/>
+            <property name="searchAnnotations" value="true"/>
+        </properties>
+    </rule>
+
+    <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.PropertyTypeHint"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint"/>
+    <rule ref="SlevomatCodingStandard.TypeHints.ParameterTypeHint"/>
+    <rule ref="SlevomatCodingStandard.PHP.UselessParentheses"/>
+    <rule ref="SlevomatCodingStandard.PHP.UselessSemicolon"/>
+    <rule ref="SlevomatCodingStandard.ControlStructures.RequireNullCoalesceOperator"/>
+    <rule ref="SlevomatCodingStandard.PHP.ShortList"/>
+    <rule ref="SlevomatCodingStandard.ControlStructures.RequireNullSafeObjectOperator"/>
+    <rule ref="SlevomatCodingStandard.PHP.RequireExplicitAssertion"/>
+    -->
 </ruleset>

@@ -1,31 +1,22 @@
+# PHPStan configuration.
+#
+# Paths are relative to THIS file (.github/linters/), which is why they climb two
+# levels. That is the convention the shared workflows expect — they invoke the
+# analyser through the repository's own script (`composer phpstan`), so the config
+# path is fixed even though the working directory is the repository root.
+#
+# Level 9 is the team standard: everything short of level 10's treatment of `mixed`.
+# Lower it only with a reason recorded in CLAUDE.md, and treat that as temporary.
 parameters:
-    level: 8
+    level: 9
     fileExtensions:
         - php
-        - module
-        - inc
     paths:
-        - ../..
+        - ../../src
+        - ../../tests
+    # Analyse tests as well as source, and keep it that way: a test that no longer
+    # type-checks is usually a test that no longer tests what it claims.
     excludePaths:
-        - ../../resources/cnic/vendor/
-        - ../../build/
-        - ../../node_modules/
-        - ../../tmp/
-    bootstrapFiles:
-        - /var/www/html/whmcs/init.php
-        - ../../tests/_bootstrap.phpstan.after_whmcs.php
-        - /var/www/html/whmcs/modules/registrars/ispapi/lib/Ispapi.php
-        - /var/www/html/whmcs/modules/registrars/cnic/lib/APIClient.php
-        - ../../resources/cnic/vendor/autoload.php
-    ignoreErrors:
-        -
-            message: '#Access to an undefined property [a-zA-Z0-9\\_]+::\$(autosetup|code|status|remoteid|id|gid)#'
-            paths:
-                - ../../modules/addons/cnicssl_addon/cnicssl_addon.php
-                - ../../modules/servers/cnicssl/cnicssl.php
-                - ../../modules/servers/cnicssl/lib/SSLHelper.php
-        - '#Function [a-zA-Z0-9\\_]+ not found.#'
-        - '#Variable \$[a-zA-Z0-9\\_]+ might not be defined.#'
-        - '#Undefined variable: \$[a-zA-Z0-9\\_]+#'
-        - '#Access to an undefined property object::#'
-        - '#Parameter \#2 \$callback of function array_walk expects callable#'
+        - ../../vendor
+        - ../../build
+        - ../../node_modules
