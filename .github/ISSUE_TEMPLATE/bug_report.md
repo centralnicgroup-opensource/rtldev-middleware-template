@@ -1,32 +1,54 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-
+about: Something behaves incorrectly
+labels: bug
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+### Describe the bug
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+A clear and concise description of what goes wrong.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+### To reproduce
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+Steps, or a minimal code sample:
 
-**Context (please complete the following information):**
- - Device: [e.g. Desktop, iPhone6, all]
- - Browser [e.g. Chrome 70.0.3538.77i]
- - WHMCS Version [e.g. 7.6]
- - Server OS: [e.g. Ubuntu 18.04, iOS8.1]
- - PHP Version [e.g. 7.2.12]
- - Registrar: [e.g. CNR, HX, IBS, TPP *]
- - Module Version: [WHMCS built-in, or version number]
+1. …
+2. …
+3. …
 
-> NOTE: HX = HEXONET, CNR = CentralNic Reseller, IBS = internet.bs, TPP = TPP Wholesale
+### Expected behaviour
+
+What you expected to happen instead.
+
+### Actual behaviour
+
+What actually happened. Include the error message or unexpected output verbatim —
+paraphrased errors are usually the wrong error.
+
+### Environment
+
+- {{PROJECT_NAME}} version:
+- {{LANGUAGE}} version:
+- Operating system:
+- Installed via: <!-- package manager, source checkout, container image -->
+
+### Logs
+
+<!-- markdownlint-disable-next-line MD033 -->
+<details><summary>Relevant output</summary>
+
+```text
+paste here
+```
+
+<!-- markdownlint-disable-next-line MD033 -->
+</details>
+
+### Additional context
+
+Anything else worth knowing — a workaround you found, when it started, whether it is
+intermittent.
+
+> Please redact credentials, API keys, customer data and internal hostnames before
+> posting. For a security vulnerability, do **not** open an issue — see
+> [SECURITY.md](../SECURITY.md).
