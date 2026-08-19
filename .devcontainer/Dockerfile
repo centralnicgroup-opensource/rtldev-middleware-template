@@ -12,14 +12,19 @@
 
 FROM mcr.microsoft.com/devcontainers/base:2-ubuntu-24.04
 
-ENV DEBIAN_FRONTEND=noninteractive
+# No ENV DEBIAN_FRONTEND here on purpose. Set at image level it persists into the
+# running container, so an interactive `apt` in a shell session also loses its
+# frontend. The devcontainer Features export it themselves for their own installs,
+# so nothing needs it globally. A layer below that does, sets it for that layer:
+#
+#   RUN DEBIAN_FRONTEND=noninteractive apt-get update && ...
 ENV TERM=xterm-256color
 
 # Example of a repository-specific system package. Uncomment and adjust; delete
 # the whole layer if this repository needs none — as this one does.
 #
 # hadolint ignore=DL3008
-# RUN apt-get update \
+# RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 #     && apt-get -y install --no-install-recommends \
 #        libfoo-dev \
 #     && apt-get -y autoremove \
