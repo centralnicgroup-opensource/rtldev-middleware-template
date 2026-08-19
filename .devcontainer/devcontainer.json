@@ -104,7 +104,9 @@
   // neither and Docker mounts an empty directory; devbase reports that explicitly
   // on post-create ("/WSL_USER is empty") rather than silently losing history.
   "mounts": [
+    // Fusion specific, you might not need it in RSRMID context
     "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,readonly",
+    // RSRMID specific mounts
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     "source=${localEnv:HOME}${localEnv:USERPROFILE},target=/WSL_USER,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
