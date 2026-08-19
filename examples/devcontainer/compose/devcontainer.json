@@ -1,0 +1,68 @@
+{
+  // FRAME EXAMPLE (multi-service) — copy to .devcontainer/devcontainer.json and
+  // replace the {{TOKENS}}. This is the whmcs-src shape: the dev container is one
+  // service in a compose stack that also runs a database, a mail catcher, and so
+  // on. For a single container built from a Dockerfile, the repository's live
+  // .devcontainer/ already is that frame — this one overlays and replaces it.
+  //
+  // The devbase Feature works identically here: with dockerComposeFile + service,
+  // the tooling builds a derived image for the named service and installs the
+  // features into it. That is the reason the shared layer is a Feature rather
+  // than a copied Dockerfile — a copied Dockerfile cannot span both frames.
+  "name": "dstack-{{PROJECT_SLUG}}",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "{{SERVICE_NAME}}",
+
+  // With compose, the workspace bind mount is declared as a service volume in
+  // docker-compose.yml, and this only names where it landed. Keep the two in
+  // sync — unlike the Dockerfile frame, the basename variable cannot do it for
+  // you, because compose resolves its volumes independently.
+  "workspaceFolder": "/usr/share/{{REPO_NAME}}",
+  "shutdownAction": "stopCompose",
+
+  // Guarantees the bind sources exist on the host before Docker creates them
+  // itself as root-owned directories — for .gitconfig, a directory where git
+  // expects a file. Object form so each entry is labelled in the build log. The
+  // compose frame declares the mounts themselves as service volumes, but the
+  // host-side preflight still belongs here; see the live frame for the detail.
+  "initializeCommand": {
+    "claude-state": "mkdir -p ${localEnv:HOME}/.claude",
+    "ssh-dir": "mkdir -p ${localEnv:HOME}/.ssh",
+    "gitconfig": "touch ${localEnv:HOME}/.gitconfig"
+  },
+
+  "features": {
+    // "ghcr.io/devcontainers/features/php:1": { "version": "8.3", "installComposer": true, "extensions": "xdebug" },
+
+    // Node, gh and the Claude CLI are all absent because devbase declares them as
+    // its own Feature dependencies. Do not re-declare node:2 to move the version:
+    // one Feature id with two different option sets is two distinct Features under
+    // the spec's equality rule, so Node would install twice into the same nvm
+    // path. See ../../../.devcontainer/devcontainer.json for the full reasoning.
+    "ghcr.io/centralnicgroup-opensource/rtldev-middleware-devcontainer-features/devbase:1": {
+      // A stack whose service setup is elaborate enough to own the whole step
+      // (apache config, symlink trees, database seeding) opts out of the generic
+      // dependency install and does it in its own postCreateCommand instead.
+      "installProjectDependencies": false
+    }
+  },
+
+  // No "customizations" block: devbase contributes the whole shared VS Code layer
+  // (the GitHub, Remote Containers, Containers and Claude extensions, plus
+  // shellcheck / shell-format / vscode-yaml with their settings and the zsh
+  // terminal profile). Add one back only for this repository's language
+  // extensions.
+
+  "remoteUser": "vscode",
+
+  // Host mounts belong in docker-compose.yml for a compose frame — declaring the
+  // same path in both places is how you get a shadowed mount that is hard to
+  // diagnose. Only add "mounts" here for something the compose file does not
+  // already cover.
+  "forwardPorts": [],
+  "portsAttributes": {},
+
+  // Runs after devbase's post-create, so pnpm and the global packages are
+  // already available to it.
+  "postCreateCommand": "zsh .devcontainer/post-create.sh"
+}

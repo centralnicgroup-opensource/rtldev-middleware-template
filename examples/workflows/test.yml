@@ -1,0 +1,55 @@
+# EXAMPLE — copy to .github/workflows/test.yml.
+#
+# The paths-filter job is what keeps a docs-only or workflow-only PR from spending
+# the full test matrix. Keep the filter list honest: a path that can change behaviour
+# but is missing here produces a PR that goes green without ever being tested.
+name: Test
+"on":
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant: ${{ steps.filter.outputs.relevant }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            relevant:
+              - 'src/**'
+              - 'tests/**'
+              - '{{TEST_CONFIG_PATH}}'
+              - '{{MANIFEST}}'
+              - '{{LOCKFILE}}'
+
+  tests:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
+    uses: centralnicgroup-opensource/rtldev-middleware-shareable-workflows/.github/workflows/{{SHARED_TEST_WORKFLOW}}@main
+    secrets: inherit
+
+  # "skipped" counts as success: the filter deciding no tests were needed is a pass,
+  # not a missing result. Without this branch, every docs-only PR is blocked.
+  ci-success:
+    name: "Tests: completed"
+    needs: tests
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check result
+        run: |
+          if [ "${{ needs.tests.result }}" != "success" ] && [ "${{ needs.tests.result }}" != "skipped" ]; then
+            echo "Tests failed or were cancelled"
+            exit 1
+          fi

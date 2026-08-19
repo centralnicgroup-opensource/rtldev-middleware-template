@@ -1,0 +1,150 @@
+# EXAMPLE — copy to .github/dependabot.yml and PRUNE IT.
+#
+# Dependabot configuration cannot be shared or inherited. GitHub's org-level
+# `.github` repository only propagates issue/PR templates, CONTRIBUTING, SECURITY,
+# CODE_OF_CONDUCT, SUPPORT and FUNDING — `dependabot.yml` is not in that set, so
+# every repository needs its own copy. This file is the canonical superset to copy
+# from, not a config to adopt wholesale.
+#
+# DELETE THE ECOSYSTEMS THIS REPOSITORY DOES NOT HAVE. A `directory:` that does not
+# exist is not silently ignored — Dependabot raises a per-entry error, visible in
+# the repository's Dependabot tab, on every run. Left in place, unused entries
+# produce permanent error noise that trains everyone to ignore the tab.
+#
+# Cadence is weekly throughout: `schedule` controls *version* updates only. Security
+# updates are raised independently of it, so weekly costs no CVE responsiveness while
+# collapsing routine bumps into one predictable batch instead of daily drip.
+#
+# Grouping is per ecosystem so one PR carries the whole batch. Ungrouped, a repo with
+# a dozen dev dependencies produces a dozen PRs a week and they stop being read.
+
+version: 2
+
+updates:
+  # --- GitHub Actions -------------------------------------------------------
+  # Keep this one. Every repository has workflows, and a stale pinned action is
+  # both a supply-chain risk and a build that breaks without warning when the
+  # runner image moves.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # --- Devcontainer features ------------------------------------------------
+  # Keep this if the repository has a .devcontainer/. This is what raises the
+  # update PRs for the shared `devbase` Feature and for the language features —
+  # the propagation mechanism the old copied-scripts approach never had.
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      devcontainers:
+        patterns:
+          - "*"
+
+  # --- Docker ---------------------------------------------------------------
+  # Only if .devcontainer/ contains a Dockerfile or compose file with image
+  # references. Adjust the directory for a compose stack that lives elsewhere.
+  - package-ecosystem: "docker"
+    directory: "/.devcontainer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      docker:
+        patterns:
+          - "*"
+
+  # --- Composer (PHP) -------------------------------------------------------
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      composer-production:
+        dependency-type: "production"
+        patterns:
+          - "*"
+      composer-development:
+        dependency-type: "development"
+        patterns:
+          - "*"
+
+  # --- npm / pnpm (JS + TS) -------------------------------------------------
+  #
+  # READ THIS BEFORE ENABLING. "npm" is Dependabot's identifier for the whole JS
+  # ecosystem and it does resolve pnpm-lock.yaml. But Dependabot version updates
+  # only touch *direct* dependencies, leaving transitive ones untouched — which
+  # regularly produces vulnerability alerts on pnpm-lock.yaml entries Dependabot
+  # itself cannot then resolve, plus duplicate PRs.
+  #
+  # php-sdk therefore leaves this OUT and runs `daily-node-dependency-refresh.yml`
+  # instead: a full `pnpm update` across the whole tree, every day. The trade-off is
+  # that a CVE in a transitive Node dependency is fixed on the next daily run (~24h)
+  # rather than immediately. Dependabot *security* alerts stay active either way —
+  # they do not depend on this file.
+  #
+  # Pick one. Enabling both is what produces the duplicate-PR noise.
+  #
+  # - package-ecosystem: "npm"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #   open-pull-requests-limit: 5
+  #   commit-message:
+  #     prefix: "chore"
+  #     include: "scope"
+  #   groups:
+  #     npm-production:
+  #       dependency-type: "production"
+  #       patterns:
+  #         - "*"
+  #     npm-development:
+  #       dependency-type: "development"
+  #       patterns:
+  #         - "*"
+
+  # --- Other ecosystems -----------------------------------------------------
+  # Uncomment the one this repository uses; delete the rest.
+  #
+  # - package-ecosystem: "gomod"       # Go
+  # - package-ecosystem: "maven"       # Java
+  # - package-ecosystem: "pip"         # Python
+  # - package-ecosystem: "cargo"       # Rust
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #     day: "monday"
+  #   open-pull-requests-limit: 5
+  #   commit-message:
+  #     prefix: "chore"
+  #     include: "scope"
+  #   groups:
+  #     all:
+  #       patterns:
+  #         - "*"

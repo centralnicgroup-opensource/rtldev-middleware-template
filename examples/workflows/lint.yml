@@ -1,0 +1,45 @@
+# EXAMPLE — copy to .github/workflows/lint.yml.
+#
+# Deliberately thin. The jobs themselves (dependency CVE audit, secret scanning,
+# actionlint, hadolint, prettier, shellcheck, and the language analysers) live in the
+# shared workflow, so caching, versions and the matrix are maintained once for all
+# repositories. If you find yourself adding real logic here, it belongs there instead.
+#
+# Pick the shared workflow that matches this repository's language — the available
+# ones are in centralnicgroup-opensource/rtldev-middleware-shareable-workflows.
+name: Lint & Security
+"on":
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lint:
+    uses: centralnicgroup-opensource/rtldev-middleware-shareable-workflows/.github/workflows/{{SHARED_LINT_WORKFLOW}}@main
+    with:
+      # prettier is opt-in in the shared workflow because it needs a Node toolchain in
+      # the calling repository. This template ships one (package.json + prettier), so
+      # ask for it: unformatted Markdown should be a red build, not a local nag.
+      prettier: true
+    secrets: inherit
+
+  # A single required check to protect the branch with. Without it, branch protection
+  # has to name every job in the shared workflow, and adding a job there silently
+  # stops being required here.
+  ci-success:
+    name: "Lint: completed"
+    needs: lint
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check result
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ]; then
+            exit 1
+          fi

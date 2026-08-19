@@ -1,0 +1,43 @@
+# EXAMPLE — copy to .github/workflows/daily-node-dependency-refresh.yml.
+#
+# Copy this only if you left the `npm` ecosystem OUT of .github/dependabot.yml.
+# Running both is what produces the duplicate-PR noise this exists to avoid.
+#
+# Why it exists instead of a Dependabot npm entry:
+#
+# Dependabot version updates only touch direct dependencies, leaving transitive deps
+# untouched. That regularly produces false-positive vulnerability alerts for
+# pnpm-lock.yaml entries Dependabot itself cannot resolve.
+#
+# This workflow runs `pnpm update` across the full dependency tree daily, keeping
+# pnpm-lock.yaml current including transitive packages.
+#
+# Trade-off: there is no immediate security PR when a CVE drops for a transitive Node
+# dependency — the fix arrives on the next daily run (~24 h). A deliberate choice
+# against the duplicate-PR and false-positive noise an npm ecosystem reintroduces.
+#
+# Dependabot *security* alerts (GitHub Advisory Database scanning) remain active
+# independently of dependabot.yml and are unaffected by this decision.
+name: Daily Node dependency refresh
+"on":
+  schedule:
+    # Off the hour: scheduled workflows queue behind everyone else's on:00 crons.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# cancel-in-progress: false — a half-finished dependency update that gets cancelled
+# can leave a branch with a lockfile that resolves against nothing.
+concurrency:
+  group: daily-node-dependency-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh-dependencies:
+    uses: centralnicgroup-opensource/rtldev-middleware-shareable-workflows/.github/workflows/daily-node-dependency-refresh.yml@main
+    secrets: inherit
+    with:
+      base-ref: "{{DEFAULT_BRANCH}}"

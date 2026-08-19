@@ -1,0 +1,28 @@
+# EXAMPLE — copy to .github/workflows/release.yml.
+#
+# semantic-release reads the commit history to decide whether a push releases a patch,
+# a minor, a major, or nothing at all. Two consequences worth knowing:
+#
+#   * `fix`/`feat` commit types trigger releases, which is why the contribution rules
+#     reserve them for source changes.
+#   * Squash merging must stay disabled at the repository level — squashing collapses
+#     the individual commit types into one and the version decision goes with them.
+name: Release
+"on":
+  push:
+    branches:
+      - "{{DEFAULT_BRANCH}}"
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  deployments: write
+  # id-token: write is needed for npm provenance / trusted publishing. Harmless if
+  # this repository publishes nothing.
+  id-token: write
+
+jobs:
+  release:
+    uses: centralnicgroup-opensource/rtldev-middleware-shareable-workflows/.github/workflows/{{SHARED_RELEASE_WORKFLOW}}@main
+    secrets: inherit

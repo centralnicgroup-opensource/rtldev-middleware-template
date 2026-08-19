@@ -1,0 +1,60 @@
+# FRAME EXAMPLE (multi-service) — copy to .devcontainer/docker-compose.yml.
+#
+# The dev container is the {{SERVICE_NAME}} service; the rest are backing
+# services. Two conventions worth keeping:
+#
+#   * The workspace bind mount lives here, and its target must match
+#     "workspaceFolder" in devcontainer.json.
+#   * Host mounts (.ssh, .claude, the host home for shell history) live here too
+#     rather than in devcontainer.json's "mounts" — declaring a path in both
+#     places produces a shadowed mount that is painful to diagnose.
+
+services:
+  "{{SERVICE_NAME}}":
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dstack-{{PROJECT_SLUG}}
+    volumes:
+      # Workspace. Target must equal devcontainer.json's workspaceFolder.
+      - ..:/usr/share/{{REPO_NAME}}:cached
+      # Sibling repositories this stack needs on the same filesystem, if any.
+      # - ../../{{SIBLING_REPO}}:/usr/share/{{SIBLING_REPO}}:cached
+      - ~/.ssh:/home/vscode/.ssh:ro
+      - ~/.gitconfig:/home/vscode/.gitconfig:cached
+      # /WSL_USER is where devbase looks for .zsh_history to persist shell
+      # history across rebuilds.
+      - ~/:/WSL_USER:cached
+      - ~/.claude:/home/vscode/.claude:cached
+    environment:
+      - TZ=Europe/Berlin
+    # Keeps the container up while VS Code is detached, so an attach is instant.
+    command: sleep infinity
+    depends_on:
+      - database
+    networks:
+      - "{{NETWORK_NAME}}"
+
+  database:
+    image: mariadb:11
+    container_name: dstack-{{PROJECT_SLUG}}-db
+    environment:
+      TZ: Europe/Berlin
+      MARIADB_ROOT_PASSWORD: "{{DB_PASSWORD}}"
+      MARIADB_DATABASE: "{{DB_NAME}}"
+      MARIADB_USER: "{{DB_USER}}"
+      MARIADB_PASSWORD: "{{DB_PASSWORD}}"
+    volumes:
+      - database-data:/var/lib/mysql
+    restart: unless-stopped
+    networks:
+      - "{{NETWORK_NAME}}"
+
+networks:
+  "{{NETWORK_NAME}}":
+    driver: bridge
+
+# A named volume rather than a host path: a host bind for database files ties the
+# stack to one host layout and makes a reset a manual `rm -rf`.
+volumes:
+  database-data:
