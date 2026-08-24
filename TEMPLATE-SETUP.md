@@ -174,6 +174,10 @@ pnpm repo:settings:apply    # make GitHub match the file (needs admin)
 
 - [ ] `.github/repo-settings.conf` reviewed — description, topics, and the
       `HAS_ISSUES` / `RULESET_ENABLED` decisions
+- [ ] `IS_TEMPLATE=false` in that file. It ships as `true` because the file comes from
+      a template repository, where that is correct; a repository created from one is
+      not itself a template. Applying without changing it puts a "Use this template"
+      button on this project
 - [ ] `pnpm repo:settings:apply` run, and `pnpm repo:settings` then comes back clean
 - [ ] `.github/CODEOWNERS` reviewed
 - [ ] Secrets and variables the shared workflows need created. List their names in

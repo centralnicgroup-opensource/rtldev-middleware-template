@@ -145,6 +145,13 @@ Check mode never writes and exits non-zero on drift, which is what
 Applying is deliberately manual: a workflow with admin over its own repository can be
 made to apply a merged change to its own settings, protections included.
 
+The conf ships with its identity fields as `{{TOKENS}}`, and check mode reports an
+unanswered one as unconfigured rather than failing on it — otherwise the weekly job
+could never pass in this repository, whose identity fields stay placeholders by design.
+Everything else is still compared, because the merge, feature and security settings are
+the same here as in anything created from here. Apply mode refuses outright while a
+token remains, so the literal `{{DESCRIPTION}}` never reaches GitHub.
+
 Branch protection is the exception — it belongs in an **organisation ruleset** targeting
 `rtldev-middleware-*`, because that also covers repositories that do not exist yet.
 See [TEMPLATE-SETUP.md](TEMPLATE-SETUP.md) section 8.

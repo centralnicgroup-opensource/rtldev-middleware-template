@@ -26,6 +26,11 @@ jobs:
       # "unreadable" and does not count them as drift, so this job stays honest rather
       # than green-by-omission. Add a REPO_SETTINGS_TOKEN secret (fine-grained, read
       # administration) to cover them too.
+      #
+      # In this repository the identity fields are {{placeholders}} permanently — it is
+      # the template — and are reported as "unconfigured" for the same reason. That is
+      # what makes this job runnable here at all, and the settings it does cover apply
+      # to the template as much as to anything created from it.
       - name: Check settings against repo-settings.conf
         env:
           GH_TOKEN: ${{ secrets.REPO_SETTINGS_TOKEN || secrets.GITHUB_TOKEN }}

@@ -20,6 +20,7 @@ REPO=""
 
 DRIFT=0
 SKIPPED=0
+UNCONFIGURED=0
 
 # --- output ------------------------------------------------------------------
 
@@ -32,9 +33,16 @@ die() {
 
 # Reports one field. In check mode it records drift; in apply mode the caller has
 # already written the value, so this is just the log line.
+#
+# A wanted value that is still a {{TOKEN}} is a question nobody has answered, so there
+# is nothing to compare it against — reported and counted separately from a real
+# mismatch, and separately again from a field this token cannot read.
 compare() {
     local label="$1" want="$2" got="$3"
-    if [[ "$got" == "unknown" ]]; then
+    if [[ "$want" =~ \{\{[A-Z_]+\}\} ]]; then
+        info "? ${label}: still a {{placeholder}} — not configured"
+        UNCONFIGURED=$((UNCONFIGURED + 1))
+    elif [[ "$got" == "unknown" ]]; then
         info "? ${label}: cannot read with this token — skipped"
         SKIPPED=$((SKIPPED + 1))
     elif [[ "$want" == "$got" ]]; then
@@ -80,15 +88,23 @@ cd "$(git rev-parse --show-toplevel)" || die "not inside a git repository"
 [[ "$CONFIG" == /* ]] || CONFIG="./${CONFIG}"
 
 # A repository still carrying template placeholders would have its description set to
-# the literal "{{DESCRIPTION}}", so refuse rather than write nonsense.
-if grep -qE '\{\{[A-Z_]+\}\}' "$CONFIG"; then
+# the literal "{{DESCRIPTION}}", so apply mode refuses rather than write nonsense.
+#
+# Check mode does not, because rtldev-middleware-template is itself a live repository:
+# its identity fields are placeholders permanently and by design, so dying here would
+# mean the one repository that ships this script could never run it, and its weekly
+# drift job could only ever be red. The unanswered fields are reported as unconfigured
+# instead, which leaves everything else — the merge buttons, features and security
+# toggles, identical for the template and for anything created from it — genuinely
+# checked rather than skipped along with them.
+if [[ "$MODE" == "apply" ]] && grep -qE '\{\{[A-Z_]+\}\}' "$CONFIG"; then
     die "${CONFIG} still contains {{PLACEHOLDERS}} — finish TEMPLATE-SETUP.md section 1 first"
 fi
 
 # shellcheck source=/dev/null
 . "$CONFIG"
 
-: "${DESCRIPTION:=}" "${HOMEPAGE:=}" "${TOPICS:=}"
+: "${DESCRIPTION:=}" "${HOMEPAGE:=}" "${TOPICS:=}" "${IS_TEMPLATE:=false}"
 : "${ALLOW_SQUASH_MERGE:=false}" "${ALLOW_REBASE_MERGE:=true}" "${ALLOW_MERGE_COMMIT:=false}"
 : "${ALLOW_AUTO_MERGE:=true}" "${DELETE_BRANCH_ON_MERGE:=true}"
 : "${HAS_ISSUES:=true}" "${HAS_PROJECTS:=false}" "${HAS_WIKI:=false}" "${HAS_DISCUSSIONS:=false}"
@@ -100,7 +116,7 @@ fi
 : "${REQUIRE_LAST_PUSH_APPROVAL:=true}" "${REQUIRE_LINEAR_HISTORY:=true}"
 : "${REQUIRED_CHECKS:=}" "${EXPECTED_SECRETS:=}" "${EXPECTED_VARIABLES:=}"
 
-for name in ALLOW_SQUASH_MERGE ALLOW_REBASE_MERGE ALLOW_MERGE_COMMIT ALLOW_AUTO_MERGE \
+for name in IS_TEMPLATE ALLOW_SQUASH_MERGE ALLOW_REBASE_MERGE ALLOW_MERGE_COMMIT ALLOW_AUTO_MERGE \
     DELETE_BRANCH_ON_MERGE HAS_ISSUES HAS_PROJECTS HAS_WIKI HAS_DISCUSSIONS \
     PRIVATE_VULNERABILITY_REPORTING VULNERABILITY_ALERTS AUTOMATED_SECURITY_FIXES \
     SECRET_SCANNING SECRET_SCANNING_PUSH_PROTECTION RULESET_ENABLED \
@@ -136,6 +152,7 @@ read_field() {
 desired_core=$(jq -n \
     --arg description "$DESCRIPTION" \
     --arg homepage "$HOMEPAGE" \
+    --argjson is_template "$IS_TEMPLATE" \
     --argjson has_issues "$HAS_ISSUES" \
     --argjson has_projects "$HAS_PROJECTS" \
     --argjson has_wiki "$HAS_WIKI" \
@@ -322,7 +339,7 @@ fi
 # --- summary -----------------------------------------------------------------
 
 head2 "Summary"
-info "drift: ${DRIFT}   unreadable: ${SKIPPED}"
+info "drift: ${DRIFT}   unreadable: ${SKIPPED}   unconfigured: ${UNCONFIGURED}"
 
 if [[ "$MODE" == "apply" ]]; then
     info "applied. Re-run without --apply to confirm."
@@ -332,5 +349,9 @@ fi
 if [[ "$DRIFT" -gt 0 ]]; then
     info "run with --apply to reconcile"
     exit 1
+fi
+if [[ "$UNCONFIGURED" -gt 0 ]]; then
+    info "what is configured matches; answer the {{placeholders}} to cover the rest"
+    exit 0
 fi
 info "settings match the config"
