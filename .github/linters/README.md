@@ -19,15 +19,27 @@ The PHP configs reference `../../src` and `../../tests` because they are resolve
 relative to the config file, not the working directory. Keep them that way: the shared
 CI workflows invoke the analysers through the repository's own scripts
 (`composer phpcs`, `composer phpstan`, `composer psalm`), which run from the repository
-root with an explicit `-c .github/linters/…`, so a config that assumes the root instead
-silently analyses nothing.
+root with an explicit `-c .github/linters/…`. A config that assumes the root instead
+resolves to `.github/linters/src`, and analyses nothing.
 
-Verify after editing — an analyser that finds no files exits **0**, which looks
-identical to a clean run:
+It will not pass quietly, though. Handed a path that matches nothing — missing, or
+present but empty — each analyser exits non-zero and says why:
 
-```sh
-composer phpstan -- --debug   # lists the files it actually analysed
-```
+| Tool    | Exit | Message                      |
+| ------- | ---- | ---------------------------- |
+| PHPStan | 1    | `No files found to analyse.` |
+| Psalm   | 2    | `No files analyzed`          |
+| phpcs   | 16   | `No files were checked.`     |
+
+Note that scope is declared in **two** places depending on the tool: `phpstan.neon`
+and `psalm.xml` carry their own paths, while `phpcs.xml` declares no `<file>` elements
+and takes them on the command line (`… -q src tests`), cwd-relative. Changing what
+gets analysed means editing the config for the analysers _and_ the script for the
+sniffer.
+
+The one place an empty input really is silent is `xargs --no-run-if-empty` in the
+`shellcheck` job of `.github/workflows/quality.yml`, which exits 0 saying nothing —
+deliberately, so a repository with no shell scripts passes.
 
 ## Wiring them up
 
