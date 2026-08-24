@@ -51,27 +51,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      # -print0 | xargs -0 rather than word-splitting a variable: it survives paths with
-      # spaces, and `--no-run-if-empty` makes "this repository has no shell scripts" a
-      # pass instead of a shellcheck invoked with no arguments (which exits non-zero).
+      # `git ls-files` rather than `find`, for two reasons.
       #
-      # The pruned directories hold generated scripts that are not ours to lint:
-      # .husky/_/ is written by husky on install (and its husky.sh has no shebang, so
-      # it fails SC2148), node_modules/ and vendor/ are dependencies. None of them
-      # exist in this job — it is a bare checkout with no install step — but pruning
-      # them means running this same command locally, in a populated working tree,
-      # gives the same answer CI does instead of a spurious failure.
+      # It lints only *tracked* files, which keeps `env.sh` out. That file is
+      # gitignored (see .gitignore) because it holds credentials for local testing,
+      # and shellcheck echoes the offending source line for every finding — so
+      # linting it means a syntax slip prints credential lines to the terminal. This
+      # job is a bare checkout so the file never exists here, but the command is
+      # meant to give the same answer when run locally in a populated working tree,
+      # and that is exactly where it does exist.
+      #
+      # It also needs no prune list. The generated scripts that are not ours to lint
+      # live in .husky/_/ (written by husky on install; its husky.sh has no shebang,
+      # so it fails SC2148), node_modules/ and vendor/ — all three untracked, so
+      # there is nothing to forget to exclude when a fourth one appears.
+      #
+      # .husky/pre-commit is named explicitly because it has no `.sh` extension.
+      # -z | xargs -0 survives paths with spaces, and `--no-run-if-empty` makes
+      # "this repository has no shell scripts" a pass instead of a shellcheck
+      # invoked with no arguments (which exits 3 with a usage dump).
+      #
+      # Tradeoff accepted: a script that is present but not yet committed is not
+      # linted, so the very first commit in a new repository lints nothing.
       - name: ShellCheck
         run: |
-          {
-            find . \
-              -path ./.git -prune -o \
-              -path ./node_modules -prune -o \
-              -path ./vendor -prune -o \
-              -path ./.husky/_ -prune -o \
-              -name '*.sh' -print0
-            [ -f .husky/pre-commit ] && printf '%s\0' .husky/pre-commit
-          } | xargs -0 --no-run-if-empty shellcheck --severity=warning
+          git ls-files -z '*.sh' .husky/pre-commit \
+            | xargs -0 --no-run-if-empty shellcheck --severity=warning
           echo "ShellCheck completed."
 
   ci-success:
