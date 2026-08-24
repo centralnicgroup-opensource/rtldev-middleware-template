@@ -184,7 +184,7 @@ if [[ "$MODE" == "apply" ]]; then
         gh api --method PUT "repos/${REPO}/topics" --input - >/dev/null ||
         die "failed to set topics"
 fi
-got_topics=$(gh api "repos/${REPO}/topics" --jq '.names | sort | join(" ")' 2>/dev/null || echo unknown)
+got_topics=$(gh api "repos/${REPO}/topics" --jq '.names | sort | join(" ")' 2>/dev/null) || got_topics=unknown
 compare "topics" "$want_topics" "$got_topics"
 
 # --- security ----------------------------------------------------------------
@@ -297,14 +297,20 @@ else
         jq -r --arg n "$RULESET_NAME" 'map(select(.name == $n)) | .[0].id // empty' 2>/dev/null || echo "")
 
     if [[ "$MODE" == "apply" ]]; then
+        # if/else rather than `A && B || C`: with the latter, a failure of the
+        # success-message branch would also run the failure message (SC2015).
         if [[ -n "$existing" ]]; then
-            gh api --method PUT "repos/${REPO}/rulesets/${existing}" --input - <<<"$ruleset_body" >/dev/null &&
-                info "= ruleset '${RULESET_NAME}' updated" ||
+            if gh api --method PUT "repos/${REPO}/rulesets/${existing}" --input - <<<"$ruleset_body" >/dev/null; then
+                info "= ruleset '${RULESET_NAME}' updated"
+            else
                 info "! ruleset update failed (admin required)"
+            fi
         else
-            gh api --method POST "repos/${REPO}/rulesets" --input - <<<"$ruleset_body" >/dev/null &&
-                info "= ruleset '${RULESET_NAME}' created" ||
+            if gh api --method POST "repos/${REPO}/rulesets" --input - <<<"$ruleset_body" >/dev/null; then
+                info "= ruleset '${RULESET_NAME}' created"
+            else
                 info "! ruleset creation failed (admin required)"
+            fi
         fi
     else
         compare "ruleset '${RULESET_NAME}'" "present" \
@@ -316,8 +322,13 @@ fi
 
 if [[ -n "$EXPECTED_SECRETS" || -n "$EXPECTED_VARIABLES" ]]; then
     head2 "Secrets and variables"
-    have_secrets=$(gh api "repos/${REPO}/actions/secrets" --jq '[.secrets[].name] | join(" ")' 2>/dev/null || echo unknown)
-    have_vars=$(gh api "repos/${REPO}/actions/variables" --jq '[.variables[].name] | join(" ")' 2>/dev/null || echo unknown)
+    # `x=$(cmd) || x=unknown`, never `x=$(cmd || echo unknown)`. On a 403 `gh api`
+    # exits non-zero *and* prints the error JSON to stdout, so the inline form
+    # captures that JSON with "unknown" appended — which never equals "unknown", so
+    # compare()'s unreadable guard misses and the row is reported as drift with a
+    # JSON blob as its observed value. Same applies to the topics probe above.
+    have_secrets=$(gh api "repos/${REPO}/actions/secrets" --jq '[.secrets[].name] | join(" ")' 2>/dev/null) || have_secrets=unknown
+    have_vars=$(gh api "repos/${REPO}/actions/variables" --jq '[.variables[].name] | join(" ")' 2>/dev/null) || have_vars=unknown
     for want in $EXPECTED_SECRETS; do
         if [[ "$have_secrets" == "unknown" ]]; then
             compare "secret ${want}" "present" "unknown"
