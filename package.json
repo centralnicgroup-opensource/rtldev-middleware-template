@@ -23,8 +23,15 @@
   "bugs": "https://github.com/centralnicgroup-opensource/{{REPO_NAME}}/issues",
   "keywords": [],
   "engines": {
-    "node": ">=24.15.0",
+    "node": "^24.15.0 || ^26.0.0",
     "npm": ">=12.0.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.0.0",
+      "onFail": "error"
+    }
   },
   "scripts": {
     "prepare": "husky",
