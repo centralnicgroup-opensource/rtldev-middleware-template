@@ -11,7 +11,6 @@ eventually trips over.
 | [`psalm.xml`](psalm.xml)           | Psalm (errorLevel 1) | PHP        |
 | [`tsconfig.json`](tsconfig.json)   | TypeScript compiler  | TypeScript |
 | [`sun_checks.xml`](sun_checks.xml) | Checkstyle           | Java       |
-| [`.perlcriticrc`](.perlcriticrc)   | Perl::Critic         | Perl       |
 
 ## Why the paths climb two levels
 
