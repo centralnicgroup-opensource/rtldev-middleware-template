@@ -3,7 +3,7 @@ root = true
 [*]
 charset = utf-8
 end_of_line = lf
-# 4 for PHP/Perl-leaning repositories, 2 for JS/TS/Go. Set it once, here, to
+# 4 for PHP-leaning repositories, 2 for JS/TS/Go. Set it once, here, to
 # whatever this repository's primary language uses — the per-type overrides below
 # then only cover the exceptions.
 indent_style = space
