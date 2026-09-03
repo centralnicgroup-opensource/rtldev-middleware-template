@@ -28,7 +28,7 @@ a blank repository and a week of copying files out of a neighbour.
 | [`.github/SECURITY.md`](.github/SECURITY.md)                     | Vulnerability reporting policy and response targets.                                                                                                  |
 
 Root-level hygiene files (`.editorconfig`, `.gitattributes`, `.gitignore`,
-`.prettierrc`, `.prettierignore`, `.husky/`, `codecov.yml`, `package.json`) are
+`.prettierignore`, `.husky/`, `codecov.yml`, `package.json`) are
 live, not examples: they apply to a new repository as-is, and only need pruning
 where they mention a language the repository does not use. So is
 [`.devcontainer/`](.devcontainer/) — see below.
