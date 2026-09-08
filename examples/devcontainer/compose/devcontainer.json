@@ -21,14 +21,16 @@
   "shutdownAction": "stopCompose",
 
   // Guarantees the bind sources exist on the host before Docker creates them
-  // itself as root-owned directories — for .gitconfig, a directory where git
-  // expects a file. Object form so each entry is labelled in the build log. The
-  // compose frame declares the mounts themselves as service volumes, but the
-  // host-side preflight still belongs here; see the live frame for the detail.
+  // itself as root-owned directories — for .gitconfig and .zsh_history, a
+  // directory where a file is expected. Object form so each entry is labelled in
+  // the build log. The compose frame declares the mounts themselves as service
+  // volumes, but the host-side preflight still belongs here; see the live frame
+  // for the detail.
   "initializeCommand": {
     "claude-state": "mkdir -p ${localEnv:HOME}/.claude",
     "ssh-dir": "mkdir -p ${localEnv:HOME}/.ssh",
-    "gitconfig": "touch ${localEnv:HOME}/.gitconfig"
+    "gitconfig": "touch ${localEnv:HOME}/.gitconfig",
+    "zsh-history": "touch ${localEnv:HOME}/.zsh_history"
   },
 
   "features": {

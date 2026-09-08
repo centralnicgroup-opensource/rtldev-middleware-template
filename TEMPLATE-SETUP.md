@@ -67,8 +67,9 @@ What it still wants from you:
 - [ ] Container rebuilt and verified: prompt renders, `devbase-env-info` reports the
       right versions, `cz` launches the commit prompt, `git push` authenticates
       through `gh` (the helper is written to this repository's `.git/config`, not to
-      your global one — `~/.gitconfig` is bind-mounted from the host and must stay
-      untouched)
+      your global one — `~/.gitconfig` is bind-mounted from the host **readonly**, so
+      it stays untouched and a stray `git config --global` fails rather than editing
+      your host identity)
 - [ ] `.devcontainer/devcontainer-lock.json` generated with
       `npx @devcontainers/cli upgrade --workspace-folder .` and **committed**. Neither
       `devcontainer build` nor `devcontainer up` writes it, and neither does VS Code's

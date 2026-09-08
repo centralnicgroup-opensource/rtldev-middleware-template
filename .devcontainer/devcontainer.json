@@ -30,9 +30,10 @@
   //
   // Every entry exists for one reason: Docker creates a missing bind source
   // itself, as a root-owned *directory*. For ~/.claude and ~/.ssh that yields a
-  // directory nobody in the container can write to; for ~/.gitconfig it yields a
-  // directory where git expects a file, and it does so on the host too — the
-  // damage outlives the container. Creating them first is idempotent and cheap.
+  // directory nobody in the container can write to; for ~/.gitconfig and
+  // ~/.zsh_history it yields a directory where a file is expected, and it does so
+  // on the host too — the damage outlives the container. Creating them first is
+  // idempotent and cheap.
   //
   // Object form (rather than one && chain) because the spec supports it for every
   // lifecycle command: the entries run in parallel and each is labelled in the
@@ -40,7 +41,8 @@
   "initializeCommand": {
     "claude-state": "mkdir -p ${localEnv:HOME}/.claude",
     "ssh-dir": "mkdir -p ${localEnv:HOME}/.ssh",
-    "gitconfig": "touch ${localEnv:HOME}/.gitconfig"
+    "gitconfig": "touch ${localEnv:HOME}/.gitconfig",
+    "zsh-history": "touch ${localEnv:HOME}/.zsh_history"
   },
 
   "features": {
@@ -94,21 +96,36 @@
 
   "remoteUser": "vscode",
 
-  // .ssh and .gitconfig make git work as it does on the host; /WSL_USER is what
-  // devbase's history persistence reads; .claude carries the Claude Code session
-  // state. Kept here rather than in the Feature so a compose-based repository can
-  // express the same thing as compose volumes.
+  // .ssh and .gitconfig make git work as it does on the host; /WSL_USER/.zsh_history
+  // is what devbase's history persistence reads; .claude carries the Claude Code
+  // session state. Kept here rather than in the Feature so a compose-based
+  // repository can express the same thing as compose volumes.
   //
-  // The ${localEnv:HOME}${localEnv:USERPROFILE} concatenation resolves to whichever
-  // of the two the host defines. On a host that defines *both* it resolves to
-  // neither and Docker mounts an empty directory; devbase reports that explicitly
-  // on post-create ("/WSL_USER is empty") rather than silently losing history.
+  // Two rules hold for anything added here, and they are the reason this list looks
+  // the way it does:
+  //
+  // 1. Mount the narrowest path that does the job — never the host home. This list
+  //    used to bind ${localEnv:HOME} at /WSL_USER, because devbase looks under
+  //    /WSL_USER for .zsh_history. That handed every container read-write reach over
+  //    the host's SSH keys, shell profiles and every other repository on the host,
+  //    and in the workspace repository it made the readonly flag on the GitHub token
+  //    directory decorative: the same inodes were writable by the second path. Only
+  //    the history file is needed, so only the history file is mounted. (RSRMID-3052)
+  // 2. readonly unless something in the container has to write it. .ssh and
+  //    .gitconfig are an identity the container reads, not one it maintains —
+  //    devbase writes credential and signing config with `git config --local`,
+  //    never `--global`, exactly so the host's file stays untouched. .zsh_history
+  //    and .claude are read-write because history and session state are written.
+  //
+  // A single-file bind needs the host file to exist: see initializeCommand above,
+  // or Docker creates a directory in its place, on the host, and history silently
+  // stops persisting.
   "mounts": [
     // Fusion specific, you might not need it in RSRMID context
     "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,readonly",
     // RSRMID specific mounts
-    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
-    "source=${localEnv:HOME}${localEnv:USERPROFILE},target=/WSL_USER,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly",
+    "source=${localEnv:HOME}/.zsh_history,target=/WSL_USER/.zsh_history,type=bind,consistency=cached",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
   ]
 
