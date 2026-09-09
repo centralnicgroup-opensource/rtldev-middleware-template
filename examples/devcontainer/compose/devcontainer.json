@@ -36,12 +36,14 @@
   "features": {
     // "ghcr.io/devcontainers/features/php:1": { "version": "8.3", "installComposer": true, "extensions": "xdebug" },
 
-    // Node, gh and the Claude CLI are all absent because devbase declares them as
-    // its own Feature dependencies. Do not re-declare node:2 to move the version:
+    // Node and gh are absent because devbase declares them as its own Feature
+    // dependencies. The Claude CLI is absent too, but for a different reason:
+    // devbase 2.0.0 stopped installing it, because the VS Code extension runs its
+    // own bundled runtime (RSRMID-3053). Do not re-declare node:2 to move the version:
     // one Feature id with two different option sets is two distinct Features under
     // the spec's equality rule, so Node would install twice into the same nvm
     // path. See ../../../.devcontainer/devcontainer.json for the full reasoning.
-    "ghcr.io/centralnicgroup-opensource/rtldev-middleware-devcontainer-features/devbase:1": {
+    "ghcr.io/centralnicgroup-opensource/rtldev-middleware-devcontainer-features/devbase:2": {
       // A stack whose service setup is elaborate enough to own the whole step
       // (apache config, symlink trees, database seeding) opts out of the generic
       // dependency install and does it in its own postCreateCommand instead.
