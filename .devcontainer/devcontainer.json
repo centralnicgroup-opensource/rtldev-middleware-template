@@ -59,14 +59,22 @@
     // on-attach toolchain banner, and the RTK binary the committed
     // .claude/settings.json hook looks for.
     //
-    // It also declares its own Feature dependencies — Node LTS, the GitHub CLI and
-    // the Claude Code CLI — so none of the three is listed here and their digests
-    // move with a devbase release instead of a per-repository Dependabot PR. All
-    // three are devbase's own plumbing rather than a repository choice: the gh
-    // credential helper is broken without `gh`, RTK is a Claude Code proxy that
-    // does nothing without `claude`, and Node carries the language-agnostic
-    // tooling every repository has regardless of its product language (prettier,
-    // husky, lint-staged, and the quality gate that runs them).
+    // It also declares its own Feature dependencies — Node LTS and the GitHub CLI
+    // — so neither is listed here and their digests move with a devbase release
+    // instead of a per-repository Dependabot PR. Both are devbase's own plumbing
+    // rather than a repository choice: the gh credential helper is broken without
+    // `gh`, and Node carries the language-agnostic tooling every repository has
+    // regardless of its product language (prettier, husky, lint-staged, and the
+    // quality gate that runs them).
+    //
+    // The Claude Code CLI was a third until devbase 2.0.0 dropped it (RSRMID-3053):
+    // the VS Code extension ships and runs its own bundled runtime, so the
+    // npm-installed global was a redundant second copy — and one that could not
+    // update itself, being installed as root into a user-owned global npm tree.
+    // RTK stays regardless: its hook lives in the bind-mounted
+    // ~/.claude/settings.json and fires under the extension's runtime just the
+    // same, so a container without the binary still exits 127 on every Bash call.
+    // A repository that genuinely wants the CLI lists that feature itself.
     //
     // Do NOT re-declare node:2 here to move the version. One Feature id with two
     // different option sets counts as two distinct Features under the spec's
@@ -76,7 +84,7 @@
     //
     // Referenced by version, never copied. Options and troubleshooting:
     // https://github.com/centralnicgroup-opensource/rtldev-middleware-devcontainer-features
-    "ghcr.io/centralnicgroup-opensource/rtldev-middleware-devcontainer-features/devbase:1": {}
+    "ghcr.io/centralnicgroup-opensource/rtldev-middleware-devcontainer-features/devbase:2": {}
   },
 
   // No "customizations" block on purpose. devbase contributes the entire shared
