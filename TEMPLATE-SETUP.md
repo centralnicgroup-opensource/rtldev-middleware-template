@@ -157,6 +157,11 @@ cp examples/workflows/release.yml .github/workflows/
       commands and safe scripts, nothing that writes
 - [ ] `.claude/agents/` — the implementer/reviewer briefs adjusted to this
       repository's language and traps, or deleted if not wanted
+- [ ] `.claude/skills/jira-conventions/SKILL.md` — do not edit its `{{JIRA_…}}` tokens by
+      hand: add this repository's row to `.github/jira-skill.tsv` in
+      rtldev-middleware-workspace, then replace the file with the output of
+      `scripts/jira-skill-policy.sh --local --render <repository>` there. A weekly job in
+      the workspace fails on any copy that differs from the template plus its row
 - [ ] `.claude/hooks/tool-output-hygiene.sh` — kept or deleted deliberately
 - [ ] RTK hook in `.claude/settings.json` — kept (it self-guards, so it is inert without
       the binary), and any personal `rtk hook claude` removed from your own

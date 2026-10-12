@@ -82,7 +82,7 @@ siblings, not parent/child" does, because nothing in the tree states it.
 - **Branch creation:** `git checkout {{DEFAULT_BRANCH}} && git pull --ff-only` before
   `git checkout -b` — never branch from a stale local default branch or another
   feature branch.
-- **Branch naming:** prefix with the Jira issue ID — `RSRMID-1234/short-description`.
+- **Branch naming:** prefix with the Jira issue ID — `RSRMID-1234-short-description`.
 - **Pull requests:** include the Jira issue link in the description; after opening,
   add the PR URL as a comment on the Jira issue.
 - **Merging:** rebase-merge (`gh pr merge --rebase`). Squash merges are disabled at
@@ -100,14 +100,9 @@ siblings, not parent/child" does, because nothing in the tree states it.
 
 ## Atlassian / JIRA
 
-Work is tracked in **Jira Cloud**, project `RSRMID`, component `{{JIRA_COMPONENT}}` —
-not GitHub Issues.
-
-- **Descriptions must be ADF** (Atlassian Document Format, JSON) — never markdown,
-  which renders literal `\n`.
-- **Log time before Done:** an issue will not stay in **Done** without a worklog —
-  automation stamps `missing-time-spent` and reopens it. Sequence: (1) add worklog;
-  (2) remove the label; (3) transition to Done. Ask when the amount is not obvious.
+Work is tracked in **Jira Cloud**, project `RSRMID` — not GitHub Issues. Load the
+`jira-conventions` skill before creating, editing or transitioning an issue: it carries the
+required fields, this repository's title prefix and component, and the worklog rule for Done and Cancelled.
 
 ## Tool-Output Hygiene
 
