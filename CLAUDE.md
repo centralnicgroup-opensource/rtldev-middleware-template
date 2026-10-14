@@ -79,9 +79,11 @@ siblings, not parent/child" does, because nothing in the tree states it.
   devcontainer), `build` (build tooling), `chore`, `docs`, `test`, `refactor`.
 - **Breaking changes:** add `BREAKING CHANGE: <summary>` to the commit body after a
   blank line, and document the consumer upgrade path in the same change.
-- **Branch creation:** `git checkout {{DEFAULT_BRANCH}} && git pull --ff-only` before
-  `git checkout -b` — never branch from a stale local default branch or another
-  feature branch.
+- **Branch creation:** before creating a branch, and again after any PR merges,
+  run `git checkout {{DEFAULT_BRANCH}} && git pull --ff-only` first — it brings
+  in the merged commits and their release tags. Never branch from a stale local
+  `{{DEFAULT_BRANCH}}`, from `origin/{{DEFAULT_BRANCH}}` (it becomes the new
+  branch's upstream) or from another feature branch.
 - **Branch naming:** prefix with the Jira issue ID — `RSRMID-1234-short-description`.
 - **Pull requests:** include the Jira issue link in the description; after opening,
   add the PR URL as a comment on the Jira issue.
