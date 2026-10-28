@@ -1,0 +1,19 @@
+# Keeps this template's own .devcontainer/devcontainer-lock.json moving.
+#
+# A generated repository inherits this file, then TEMPLATE-SETUP.md section 3 replaces
+# it with a pruned copy of examples/dependabot.yml.
+version: 2
+updates:
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      devcontainers:
+        patterns:
+          - "*"
