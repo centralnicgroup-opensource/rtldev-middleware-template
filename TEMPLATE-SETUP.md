@@ -71,11 +71,11 @@ What it still wants from you:
       it stays untouched and a stray `git config --global` fails rather than editing
       your host identity)
 - [ ] `.devcontainer/devcontainer-lock.json` generated with
-      `npx @devcontainers/cli upgrade --workspace-folder .` and **committed**. Neither
+      `pnpm dlx @devcontainers/cli upgrade --workspace-folder .` and **committed**. Neither
       `devcontainer build` nor `devcontainer up` writes it, and neither does VS Code's
       "Reopen in Container" — `upgrade` is the only thing that does, so this is an
       explicit step, not a by-product of the first build. The file pins the feature
-      digests behind the `:1` tags and is what Dependabot's `devcontainers` ecosystem
+      digests behind the `:2` tags and is what Dependabot's `devcontainers` ecosystem
       bumps; uncommitted, there is nothing to raise a PR against and the pinning is
       silently lost. `upgrade` only reads Feature metadata from the registry — it needs
       no Docker and builds nothing, so it can be run from inside the devcontainer
